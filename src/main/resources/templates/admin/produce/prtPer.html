@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/layout}">
+<head>
+<meta charset="UTF-8">
+<title>생산 실적</title>
+</head>
+<body>
+	<article layout:fragment="content">
+		<main id="main" class="main">
+			<h4>생산 실적</h4>
+               <ul class="ul-style">
+                  <li>
+                     <div>
+                        <label for="prsDate" style="width: 100px">날짜별조회</label> 
+                        <input type="date" class="form-control" style="width: 200px; display: inline" id="sDate">
+                        	&nbsp;~
+                        <input type="date" class="form-control" style="width: 200px; display: inline" id="eDate">
+                        	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <button type="button" class="button" id="Search">검색</button>&nbsp;
+                        <button type="button" class="button" id="Reset">초기화</button>
+                     </div>
+                  </li>
+               </ul>
+			<div>
+			<br>
+				<!-- 생산 실적 그리드 -->
+				<div id="prtperGrid"></div>
+				<h6>불량 내역</h6>
+				<!-- 실적 행 클릭 시 실행되는 불량내역 -->
+				<div id="prrErrGrid"></div>			
+			</div>
+			
+			<script th:inline="javascript">
+				showAll();
+				
+				var token = $("meta[name='_csrf']").attr("content");
+				var header = $("meta[name='_csrf_header']").attr("content");
+				
+				//생산 실적 내역 그리드, 최신순이 위로 올라오게 설정
+				var prtperGrid = new tui.Grid({
+					el : document.getElementById('prtperGrid'),
+					scrollX : false,
+					scrollY : false,
+			        pageOptions: {
+			            useClient: true,
+			            perPage: 10
+			        },
+					columns : [ {
+						header : '작업 지시 번호',
+						name : 'preNo',
+						align : 'center'
+					}, {
+						header : '제품명',
+						name : 'prtName',
+						filter : 'select',
+						align : 'center'
+					}, {
+						header : '생산량',
+						name : 'prtQty',
+						align : 'center',
+						formatter : function (ev){
+	                      return ev.value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')+ 'EA';
+	                    }
+					}, {
+						header : '불량 발생 개수',
+						name : 'prsErrQty',
+						align : 'center',
+						formatter : function (ev){
+	                      return ev.value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')+ 'EA';
+	                    }
+					}, {
+						header : '작업일자',
+						name : 'prsDate',
+						filter: {
+				            type: 'date',
+				            options: {
+				              format: 'yyyy-MM-dd'
+				            }
+			            },
+						align : 'center',
+						 formatter({value}) {
+						      return `${value.substring(0,10)}`;
+						    } 
+					},{
+						header : '담당자',
+						name : 'empName',
+						filter : 'select',
+						align : 'center'
+					}]
+				});
+				
+				//생산 실적 그리드에 띄워주기 위한 값을 DB에서 가져옴
+				function showAll() {
+				       fetch("getPrtPerList") 
+				       .then(res=>res.json())
+				       .then(obj=>{
+				           console.log(obj);
+				           prtperGrid.resetData(obj);
+				       })
+				}
+				/* prtPerGrid 행 클릭 시 prrErrGrid그리드에 데이터를 가져오는 클릭이벤트 */
+				prtperGrid.on('click', ev=>{
+						let data = prtperGrid.getRow(ev.rowKey)
+						console.log(data);
+						
+					$.ajax({
+						url:'getErrList',
+						data :data,
+						dataType:"json",
+						async:false,
+						success:function(data){
+							prrErrGrid.resetData(data);
+						},
+						error:function(reject){
+							console.log(reject);
+						}
+					}) 
+				});
+				//생산 실적 그리드 행 클릭 시, 불량갯수와 불량사유를 보여주는 그리드
+				var prrErrGrid = new tui.Grid({
+					el : document.getElementById('prrErrGrid'),
+					scrollX : false,
+					scrollY : false,
+					columns : [ {
+						header : '불량 코드',
+						name : 'errCode',
+						filter : 'select',
+						align : 'center'
+					}, {
+						header : '불량명',
+						name : 'errName',
+						align : 'center'
+					}, {
+						header : '불량 발생 수',
+						name : 'prsErrQty',
+						align : 'center',
+						formatter : function (ev){
+	                      return ev.value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')+ 'EA';
+	                    }
+					} ]
+				});
+				
+		         //filter 이용한 날짜조회 기능
+		            Search.addEventListener('click', () => {
+		            if($('#eDate').val() != '' && $('#sDate').val() != ''){
+		            	prtperGrid.filter('prsDate' , [{code:'afterEq', value:$('#sDate').val()}])
+		            	prtperGrid.filter('prsDate' , [{code:'beforeEq', value:$('#eDate').val()}])
+		            }
+		            });
+		         
+		           //초기화 기능
+		                 Reset.addEventListener('click', () => {
+		                 	document.getElementById('sDate').value = '';
+		                 	prtperGrid.unfilter('prsDate');
+		                 	document.getElementById('eDate').value='';
+		            })  
+			</script>
+		</main>
+	</article>
+</body>
+</html>

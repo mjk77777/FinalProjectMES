@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sseju.java.mat.mapper.MatMapper">
+	<select id="material" resultType="MatVO">
+		SELECT * 
+		  FROM material
+		order by mat_code  
+	</select>
+	
+	<select id="matordList" resultType="MatVO">
+		SELECT b.mat_ord_no, 
+		       b.mat_ord_qty, 
+		       m.mat_code,
+				m.mat_name,
+				TO_DATE(b.mat_ord_date,'rrrr/MM/dd') as MAT_ORD_DATE,
+				c.cp_code, 
+				c.cp_name, 
+				b.mat_price,
+				b.mat_ord_emp, 
+				e.emp_name, 
+				b.mat_ord_yn				
+		FROM mat_buy b
+		JOIN material m 
+		  ON m.mat_code = b.mat_code
+		JOIN company c 
+		  ON c.cp_code =	m.cp_code
+		JOIN employee e 
+		  on e.emp_id = b.mat_ord_emp
+		order by mat_ord_no DESC
+	</select>
+
+	<!-- 입고 Mapper -->
+	<select id="matInList" resultType="MatVO">
+		select l.lot_no,
+				m.mat_code, 
+				m.mat_name, 
+				c.mat_pass_qty, 
+				l.lot_date,
+				l.wh_code, 
+				w.wh_name
+		from lot l,
+		warehouse w,
+		material m,
+		mat_buy b,
+		mat_chk c
+		WHERE l.wh_code = w.wh_code
+		and c.mat_code = l.mp_code
+		and c.mat_ord_no = b.mat_ord_no
+		and b.mat_code = m.mat_code
+	</select>
+
+	<!-- LOT Mapper-->
+	
+
+	<!--출고 Mapper -->
+	<select id="matOutList" resultType="MatVO">
+		SELECT o.mat_out_no, 
+				o.mat_out_date, 
+		        o.mat_out_qty, 
+		        o.mat_lot_no,
+		        l.mp_code, 
+		        m.mat_name, 
+		        l.wh_code,
+		                (select w.wh_name 
+		                   from warehouse w 
+		                  WHERE l.wh_code = w.wh_code) as "wh_name"
+		FROM mat_out o,
+		    lot l,
+		    material m
+		WHERE o.mat_lot_no = l.lot_no
+		AND l.mp_code = m.mat_code
+		order by mat_out_no
+	</select>
+
+	<!--재고 Mapper -->
+	<select id="matStockList" resultType="MatVO">
+		SELECT l.lot_no, 
+				l.lot_date, 
+				l.mp_code, 
+				m.mat_name, 
+				l.lot_qty, 
+				l.wh_code, 
+				w.wh_name
+		FROM material m,
+		    lot l,
+		    warehouse w
+		WHERE m.mat_code = l.mp_code
+		and l.wh_code = w.wh_code
+		and l.lot_qty != 0
+		ORDER BY lot_no
+	</select>
+
+	<!-- 검수내역 Mapper -->
+	<select id="matCheckList" resultType="MatVO">
+		SELECT c.mat_chk_code, 
+				c.mat_in_qty, 
+				c.mat_err_qty, 
+		       c.mat_pass_qty, 
+		       c.mat_chk_date, 
+		       c.mat_ord_no,
+		       me.err_code, 
+		       me.mat_err_doc, 
+		       er.err_name,
+		       l.mp_code, 
+		       m.mat_name
+		  FROM mat_chk c,
+		      mat_err me,
+		      error er,
+		      lot l,
+		      material m
+		WHERE m.mat_code = l.mp_code
+		  AND l.mat_chk_code = c.mat_chk_code
+		  AND c.mat_chk_code = me.mat_chk_code
+		  AND me.err_code = er.err_code
+     group by c.mat_chk_code , c.mat_in_qty, c.mat_err_qty, 
+		       c.mat_pass_qty , c.mat_chk_date , c.mat_ord_no,
+		       me.err_code, me.mat_err_doc, er.err_name,
+		       l.mp_code, m.mat_name    
+    ORDER BY mat_chk_code
+	</select>
+
+	<update id="docUpdate" parameterType="MatVO">
+		UPDATE mat_err 
+		   SET mat_err_doc = #{matErrDoc}
+		 WHERE mat_chk_code = #{matChkCode}
+	</update>
+
+</mapper>

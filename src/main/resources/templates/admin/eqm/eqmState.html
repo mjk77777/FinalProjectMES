@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/layout}">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<!-- 제이쿼리 -->
+<script
+	src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+<!-- 토스트UI -->
+<link rel="stylesheet"
+	href="https://uicdn.toast.com/grid/latest/tui-grid.css" />
+<script src="https://uicdn.toast.com/grid/latest/tui-grid.js"></script>
+<!-- 토스트 UI 그리드 페이징 cdn -->
+<script type="text/javascript"
+	src="https://uicdn.toast.com/tui.pagination/v3.4.0/tui-pagination.js"></script>
+<script
+	src="https://uicdn.toast.com/tui.code-snippet/latest/tui-code-snippet.js"></script>
+<link rel="stylesheet" href="https://uicdn.toast.com/chart/latest/toastui-chart.min.css" />
+<script src="https://uicdn.toast.com/chart/latest/toastui-chart.min.js"></script>
+
+<style>
+     
+    </style>
+
+</head>
+<body>
+	<article layout:fragment="content">
+		<main id="main" class="main">
+			<div class="row">
+				<div class="col-sm-6">
+					<div class="card">
+						<div class="card-body">
+							<h5 class="card-title">설비별 온도변화</h5>
+							<div id="chart"></div>
+						</div>
+					</div>
+				</div>
+				
+			</div>
+
+			
+		    <script >
+		    const el = document.getElementById('chart');
+		    
+		    const data = {
+		    		  series: [
+		    		    {
+		    		      name: 'SiteA',
+		    		      data: [
+		    		        { x: 1, y: 202 },
+		    		        { x: 7, y: 350 },
+		    		        { x: 8, y: 213 },
+		    		        { x: 9, y: 230 },
+		    		        { x: 12, y: 230 },
+		    		      ],
+		    		    },
+		    		    {
+		    		      name: 'SiteB',
+		    		      data: [
+		    		        { x: 1, y: 312 },
+		    		        { x: 3, y: 320 },
+		    		        { x: 7, y: 300 },
+		    		        { x: 9, y: 320 },
+		    		        { x: 13, y: 20 },
+		    		      ],
+		    		    },
+		    		  ],
+		    		}
+		    
+		    const options = {
+		    		  series: {
+		    		    shift: true
+		    		  },
+		    		  chart: { width: 700, height: 400 }
+		    		}
+		    
+
+		    const chart = Chart.lineChart({el, data, options});
+
+		    
+		    
+		    	    
+         </script>
+		</main>
+	</article>
+</body>
+</html>
